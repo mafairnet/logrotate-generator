@@ -1,0 +1,227 @@
+extends layout
+
+block content
+    h1= title
+
+    if error
+        .row
+            .col-md-12
+                .alert.alert-danger.alert-dismissible(role='alert')
+                    button.close(type='button', data-dismiss='alert', aria-label='Close')
+                        span(aria-hidden='true') &times;
+                    span= error.message
+
+    form(method='POST', action='/', enctype='multipart/form-data')
+        fieldset
+            .row
+                .col-md-12
+                    legend Mandatory options
+                .col-md-12
+                    .form-group(class=error && error.field === 'file' ? 'has-error' : '')
+                        label.control-label(for='file') File(s)
+                        input#file.form-control(type='text', name='file', placeholder='File(s)...', value=config.file)
+                        p.help-block
+                            | Name of the file(s) that will be processed for the log rotation. (<a href='#more-file' data-toggle='collapse' aria-expanded='false' aria-controls='more-file'>Read more...</a>)
+                            | <div id='more-file' class='collapse'>
+                            | Can be either :
+                            | <ul>
+                            | <li>A single file <pre>"/var/log/apache2/apache.log"</pre></li>
+                            | <li>A set <pre>"/home/username/logs/*"</pre></li>
+                            | <li>A combination <pre>"/home/username2/*/main.log"</pre></li>
+                            | <li>A list <pre>"/home/us1/logs/*.log /home/us2/logs/apache.log"</pre></li>
+                            | </ul>
+                            | </div>
+                .col-md-12
+                    .form-group
+                        label.control-label(for='rotate') Rotation
+                        input#rotate.form-control(type='number', name='rotate', placeholder='Rotation...', min='0', value=config.rotate)
+                        p.help-block.
+                            Number of permutations before deleting a log (empty, or 0 means no permutation will be performed, old log file will be directly deleted)
+
+                .col-sm-6
+                    .form-group(class=error && error.field === 'type' ? 'has-error' : '')
+                        label.control-label(for='interval')
+                            input.rotatetype.form-control-inline(type='radio', name='rotatetype', data-target='#interval', checked=config.interval === 'on') 
+                            | &nbsp;Interval
+                        select#interval.form-control(name='interval')
+                            option(value='daily', selected='daily' === config.interval) Daily
+                            option(value='weekly', selected='weekly' === config.interval) Weekly
+                            option(value='monthly', selected='monthly' === config.interval) Monthly
+                        p.help-block.
+                            Interval to rotate logs. Can be Daily, Weekly of Monthly rotation
+                .col-sm-6
+                    .form-group(class=error && error.field === 'type' ? 'has-error' : '')
+                        label.control-label(for='size')
+                            input.rotatetype.form-control-inline(type='radio', name='rotatetype', data-target='#size', checked=config.size === 'on') 
+                            | &nbsp;Size
+                        .input-group
+                            input#size.form-control(type='number', min='0', placeholder='Size...', name='size', value=config.size)
+                            .input-group-btn
+                                button.btn.btn-default.dropdown-toggle(data-toggle='dropdown', aria-expanded='false')
+                                    | Unit <span class='caret'></span>
+                                ul.dropdown-menu.dropdown-menu-right
+                                    li: a(href='javascript:{}') KB
+                                    li: a(href='javascript:{}') MB
+                                    li: a(href='javascript:{}') GB
+                                
+        fieldset
+            .row
+                .col-md-12
+                    legend Misc options
+                .col-md-12
+                    .form-group
+                        label.control-label(for='emailaddress') Email address
+                        input#emailaddress.form-control(type='email', name='emailaddress', placeholder='Email address...', value=config.emailaddress)
+                        p.help-block.
+                            Email address at which the log will be sent during rotation
+                .col-md-12
+                    .form-group
+                            label.control-label(for='copytruncate') 
+                                input#copytruncate.form-control-inline(type='checkbox', name='copytruncate', checked=config.copytruncate === 'on')
+                                | &nbsp;Copy truncate
+                            p.help-block.
+                                By Checking this box, logrotate will truncate the original log after having created a copy instead of moving the original log.
+                .col-md-12
+                    .row
+                        .col-md-6
+                            .form-group
+                                label.control-label(for='owner') Owner
+                                input#owner.form-control(type='text', name='owner', placeholder='Owner...', value=config.owner)
+                                p.help-block.
+                                    Owner of the log that will be rotated
+                        .col-md-6
+                            .form-group
+                                label.control-label(for='group') Group
+                                input#group.form-control(type='text', name='group', placeholder='Group...', value=config.group)
+                                p.help-block.
+                                    Group of the log that will be rotated
+                    .row.text-center
+                        .col-sm-4
+                            .row
+                                h4.col-sm-12 Owner permissions
+                                .col-sm-1.col-sm-offset-4
+                                    .form-group
+                                        label.control-label(for='ownerR') R
+                                        input#ownerR.form-control(type='checkbox', name='ownerR', checked=config.ownerR === 'on')
+                                .col-sm-1
+                                    .form-group
+                                        label.control-label(for='ownerW') W
+                                        input#ownerW.form-control(type='checkbox', name='ownerW', checked=config.ownerW === 'on')
+                                .col-sm-1
+                                    .form-group
+                                        label.control-label(for='ownerX') X
+                                        input#ownerX.form-control(type='checkbox', name='ownerX', checked=config.ownerX === 'on')
+                        .col-sm-4
+                            .row
+                                h4.col-sm-12 Group permissions
+                                .col-sm-1.col-sm-offset-4
+                                    .form-group
+                                        label.control-label(for='groupR') R
+                                        input#groupR.form-control(type='checkbox', name='groupR', checked=config.groupR === 'on')
+                                .col-sm-1
+                                    .form-group
+                                        label.control-label(for='groupW') W
+                                        input#groupW.form-control(type='checkbox', name='groupW', checked=config.groupW === 'on')
+                                .col-sm-1
+                                    .form-group
+                                        label.control-label(for='groupX') X
+                                        input#groupX.form-control(type='checkbox', name='groupX', checked=config.groupX === 'on')
+                        .col-sm-4
+                            .row
+                                h4.col-sm-12 Other permissions
+                                .col-sm-1.col-sm-offset-4
+                                    .form-group
+                                        label.control-label(for='otherR') R
+                                        input#otherR.form-control(type='checkbox', name='otherR', checked=config.otherR === 'on')
+                                .col-sm-1
+                                    .form-group
+                                        label.control-label(for='otherW') W
+                                        input#otherW.form-control(type='checkbox', name='otherW', checked=config.otherW === 'on')
+                                .col-sm-1
+                                    .form-group
+                                        label.control-label(for='otherX') X
+                                        input#otherX.form-control(type='checkbox', name='otherX', checked=config.otherX === 'on')
+
+                .col-sm-4
+                    .form-group
+                        label.control-label(for='missingok') 
+                            input#missingok.form-control-inline(type='checkbox', name='missingok', checked=config.missingok === 'on')
+                            | &nbsp;Missing OK
+                        p.help-block.
+                            By Checking this box, logrotate will continue to next file without error.
+                .col-sm-4
+                    .form-group
+                        label.control-label(for='compress')
+                            input#compress.form-control-inline(type='checkbox', name='compress', checked=config.compress === 'on')
+                            | &nbsp;Compression
+                        p.help-block.
+                            By Checking this box, logrotate will gzip the old log.
+                .col-sm-4
+                    .form-group
+                        label.control-label(for='delaycompress')
+                            input#delaycompress.form-control-inline(type='checkbox', name='delaycompress', checked=config.delaycompress === 'on')
+                            | &nbsp;Delay compression
+                        p.help-block.
+                            By Checking this box, logrotate will not compress the currently processed log.
+
+        .row
+            .col-md-6
+                .form-group
+                    label.control-label(for='prerotate') Pre-script
+                    textarea#prerotate.form-control.mirrored(rows='3', name='prerotate', placeholder='Prerotate...')= config.prerotate
+            .col-md-6
+                .form-group
+                    label.control-label(for='postrotate') Post-script
+                    textarea#postrotate.form-control.mirrored(rows='3', name='postrotate', placeholder='Postrotate...')= config.postrotate
+        .row
+            .col-md-12
+                p.help-block.
+                        Scripts that will be executed just before/after the rotation. Leave empty if you don't need it    
+        .row
+            .col-md-12
+                button.btn.btn-primary.btn-block(type='submit') Create logrotate configuration...
+
+block append stylesheets
+    link(rel='stylesheet', href='/codemirror/lib/codemirror.css')
+    link(rel='stylesheet', href='/codemirror/theme/monokai.css')
+
+block append scripts
+    script(type='text/javascript', src='/codemirror/lib/codemirror.js')
+    script(type='text/javascript', src='/codemirror/mode/shell/shell.js')
+    script(type='text/javascript', src='/codemirror/keymap/sublime.js')
+    script.
+        $('.mirrored').each(function(idx, elt) {
+            CodeMirror.fromTextArea(elt, {
+                lineNumbers: true,
+                theme: 'monokai',
+                keyMap: 'sublime'
+            });
+        });
+        
+        $('.rotatetype').on('click', function(evt) {
+            $('.rotatetype').each(function(idx, elt) {
+                var targetInput = $($(elt).data('target'));
+                targetInput.val('');
+
+                if(elt === evt.target) {
+                    targetInput.removeAttr('disabled');
+                } else {
+                    targetInput.attr('disabled', 'disabled');
+                }
+            });
+        });
+
+        $('[data-target$="interval"]').click();
+
+        var toggleDelayCompress = function(evt) {
+            var delaycompress = $('#delaycompress');
+            if($(evt.target).is(':checked')) {
+                delaycompress.removeAttr('disabled');
+            } else {
+                delaycompress.attr('disabled', 'disabled');
+                delaycompress.prop('checked', false);
+            }
+        };
+
+        $('#compress').on('change', toggleDelayCompress);
+        toggleDelayCompress({target: $('#compress')[0]});
